@@ -66,5 +66,5 @@ class GitFileDownload:
 if __name__ == "__main__":
     # Example usage
     downloader = GitFileDownload("rwkv4fun/Rwkv-6-world")
-    file_path = downloader.download_file("README.md", revision="main")
+    file_path = downloader.download_file("*", revision="main")
     print(file_path)
