@@ -1,6 +1,6 @@
 import subprocess
 
-wisemodel_repo_url = "https://oauth2:{}@www.wisemodel.cn/{}/{}.git"
+wisemodel_repo_url = "https://oauth2:%s@www.wisemodel.cn/%s/%s.git"
 token = "wisemodel-8M2T9S2JjiMHh6vqxoQh"
 
 def upload(filename, repo_id):
