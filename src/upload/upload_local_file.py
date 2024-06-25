@@ -1,7 +1,8 @@
 import subprocess
 
-wisemodel_repo_url = "https://oauth2:%s@www.wisemodel.cn/%s/%s.git"
+wisemodel_repo_url = "https://oauth2:{}@www.wisemodel.cn/{}/{}.git"
 token = "wisemodel-8M2T9S2JjiMHh6vqxoQh"
+
 
 def upload(filename, repo_id):
     result = subprocess.run(['ls', '-l'], capture_output=True, text=True)
@@ -18,7 +19,7 @@ def upload(filename, repo_id):
     print('git lfs initialized!')
     git_repo_url = wisemodel_repo_url.format(token, 'AIMODELL', 'test_model_hub')
     print('git repo url' + git_repo_url)
-    subprocess.run(['git', 'clone', wisemodel_repo_url])
+    subprocess.run(['git', 'clone', git_repo_url])
     print('git project clone complete')
     subprocess.run(['cd', './test_model_hub'])
     print('cd project dir.')
