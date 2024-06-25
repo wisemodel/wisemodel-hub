@@ -14,7 +14,7 @@ def upload(filename, repo_id):
     print('install repo')
     subprocess.run(['yum', '-y', 'install', 'git-lfs'])
     print('install git lfs success')
-    subprocess.run(['git lfs install'])
+    subprocess.run(['git', 'lfs', 'install'])
     print('git lfs initialized!')
     git_repo_url = wisemodel_repo_url.format(token, 'AIMODELL', 'test_model_hub')
     print('git repo url' + git_repo_url)
