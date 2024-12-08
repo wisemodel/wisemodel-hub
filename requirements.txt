@@ -1,6 +1,0 @@
-tqdm==4.64.1
-requests==2.20.0
-urllib3==1.24.2
-SQLAlchemy==1.1.15
-rsa==3.4.2
-redis==3.5.0
