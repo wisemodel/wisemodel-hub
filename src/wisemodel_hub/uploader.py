@@ -5,6 +5,7 @@ from tqdm import tqdm
 
 from .auth import get_local_token, login, login_required, notebook_login
 from .constants import WM_URL_ADDFILES, WM_URL_BASE, WM_URL_CHECK, WM_URL_MERGE, WM_URL_UPLOAD
+from .git_uploader import GitUploader
 from .utils import calculate_md5, filter_files_with_regex, is_notebook
 
 
@@ -176,3 +177,48 @@ def push_to_hub(
     for file_name in file_list:
         file_path = os.path.join(dir_path, file_name)
         upload_file(file_path, repo_id, repo_type, branch, commit_message, chunk_size, retries, timeout)
+
+
+def upload_with_git(
+    access_token, repo_id, repo_type, local_dir, branch="main", pattern=None, commit_message="Upload files"
+):
+    """
+    upload_with_git 利用本地的git工具上传文件到主站仓库
+    ----------------------------------------------------
+
+    本地必须安装git工具，并检查git-lfs是否安装。
+    `git lfs install`
+
+    参数：
+    ::::::::::
+    - **access_token** - # 在主站登录后，在https://www.wisemodel.cn/my-token 页面中，`git token`tab页内获取
+    - **repo_id** - 仓库id，格式为 'owner/repo_name'
+    - **repo_type** - 仓库类型，可选值：'models'、'datasets'、'codes'
+    - **local_dir** - 本地文件夹路径
+    - **branch** - wisemodel使用git管理仓库，此参数是git分支名
+    - **pattern** - 正则表达式串，用于匹配要操作的文件
+    - **commit_message** - 仓库提交信息
+
+    抛出异常：
+    ::::::::::
+    - **GitUploadError** - 在git commit 和 git push 失败时抛出
+    - **ValueError** - local_dir 没有赋值时抛出
+    - **EnvironmentError** - git仓库初始化失败时抛出, git lfs未安装时抛出
+    """
+    # 使用示例
+    uploader = GitUploader(access_token=access_token, local_dir=local_dir)
+    if not pattern:
+        # 上传整个库
+        uploader.upload_repository(
+            repo_id=repo_id, repo_type=repo_type, local_dir=local_dir, revision=branch, commit_message=commit_message
+        )
+    else:
+        # 上传匹配的文件
+        uploader.upload_file(
+            repo_id=repo_id,
+            repo_type=repo_type,
+            revision=branch,
+            local_dir=local_dir,
+            pattern=pattern,
+            commit_message=commit_message,
+        )
