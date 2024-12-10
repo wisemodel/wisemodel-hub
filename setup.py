@@ -16,6 +16,7 @@ install_requires = [
     "requests>=2.20.0",
     "tqdm>=4.64.1",
     "python-gitlab>=5.0.0",
+    "ipywidgets>=8.1.5",
 ]
 
 extras = {}

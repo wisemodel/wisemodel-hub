@@ -5,7 +5,7 @@ import sys
 from typing import TYPE_CHECKING
 
 
-__version__ = "v0.2.0"
+__version__ = "v0.3.0"
 
 # 配置日志记录
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -19,6 +19,7 @@ _SUBMOD_ATTRS = {
         "notebook_login",
     ],
     "downloader": [
+        "download_with_git",
         "file_download",
         "lfs_file_download",
         "snapshot_download",
@@ -26,6 +27,7 @@ _SUBMOD_ATTRS = {
     "uploader": [
         "push_to_hub",
         "upload_file",
+        "upload_with_git",
     ],
 }
 
@@ -139,6 +141,7 @@ if TYPE_CHECKING:  # pragma: no cover
         notebook_login,  # noqa: F401
     )
     from .downloader import (
+        download_with_git,  # noqa: F401
         file_download,  # noqa: F401
         lfs_file_download,  # noqa: F401
         snapshot_download,  # noqa: F401
@@ -146,4 +149,5 @@ if TYPE_CHECKING:  # pragma: no cover
     from .uploader import (
         push_to_hub,  # noqa: F401
         upload_file,  # noqa: F401
+        upload_with_git,  # noqa: F401
     )

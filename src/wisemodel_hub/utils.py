@@ -1,6 +1,7 @@
 import hashlib
 import os
 import re
+import subprocess
 
 import gitlab
 import requests
@@ -79,3 +80,25 @@ def filter_files_with_regex(file_list, regex_pattern=None):
         return file_list
     pattern = re.compile(regex_pattern)
     return [file for file in file_list if pattern.search(file)]
+
+
+def is_git_repository(path):
+    git_dir = os.path.join(path, ".git")
+    return os.path.isdir(git_dir)
+
+
+def is_sparse_checkout(path):
+    sparse_checkout_file = os.path.join(path, ".git", "info", "sparse-checkout")
+    if os.path.exists(sparse_checkout_file):
+        with open(sparse_checkout_file, "r") as f:
+            content = f.read().strip()
+            if content:
+                return True
+    return False
+
+
+def ensure_git_lfs_installed():
+    try:
+        subprocess.run(["git", "lfs", "version"], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    except subprocess.CalledProcessError:
+        raise EnvironmentError("git lfs is not installed. Please install it first.")
