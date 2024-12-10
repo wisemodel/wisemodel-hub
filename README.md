@@ -6,9 +6,22 @@
 pip install --index-url https://test.pypi.org/simple/ wisemodel_hub
 ```
 
+## 相关信息获取
+### 仓库id(`repo_id`) 和 仓库类型(`repo_type`)
+如果您在主站进入了某个仓库的页面，那么repo_id和repo_type就在url中。
+url的格式如下：
+https://www.wisemodel.cn/{repo_type}/{repo_id}
+
+repo_id的格式为：{account_name}/{repo_name}
+其中：account_name是仓库主人的用户名，repo_name是仓库的名称。
+
+
+### git token
+在主站登录后，进入 https://www.wisemodel.cn/my-token 页面，
+在右侧内容区 `git token` 页内获取。
+
 ## 登录
 在登录前需要先注册账号，注册地址为：[https://wisemodel.cn/home](https://wisemodel.cn/home)
-
 
 ### 自动登录
 在执行需要登录才能执行的函数时，会自动判断是否需要登录，使用用户名和密码进行登录。
@@ -63,6 +76,23 @@ timeout=10                      # 超时时间，如果不设置则一直等待
 push_to_hub(dir_path, repo_id, repo_type, regex_pattern=regex_pattern, branch=branch, commit_message=commit_message, chunk_size=chunk_size, retries=3, timeout=10)
 ``` 
 
+### 利用本地git工具上传
+适用库内有文件夹的情况
+```python
+from wisemodel_hub import upload_with_git
+
+access_token = "your_access_token" # 在主站登录后，在https://www.wisemodel.cn/my-token 页面中，`git token`tab页内获取
+repo_id = "your_account/your_repo_name"
+repo_type = "codes"     # datasets, models, or codes
+local_dir = "your_local_dir" # 或者替换为目标目录
+branch= "main"  # 或者替换为具体的分支名称
+#pattern = r'.*\.(log|txt|json)$'    # 或者替换为正则表达式或具体文件名
+pattern = None
+commit_message = "upload files"
+
+upload_with_git(access_token, repo_id, repo_type, local_dir, branch=branch, pattern=pattern, commit_message=commit_message)
+```
+
 ## 下载
 目前不支持私有项目下载。
 ### 下载单个文件
@@ -106,4 +136,21 @@ num_parts = 8                       # 并行下载线程数
 force_download = True               # 是否强制下载，如果为True，则会重新下载文件，即使本地存在该文件
 
 snpshot_download(repo_id, local_dir=local_dir, revision="main", regex_pattern=regex_pattern, num_parts=num_parts, force_download=force_download)
+```
+
+### 利用本地git工具下载
+适用库内有文件夹的情况
+```python
+from wisemodel_hub import download_with_git
+
+access_token = "your_access_token"
+repo_id = "your_account/your_repo_name"
+repo_type = "codes"
+#pattern = r".*\.json$"    # 或者替换为正则表达式或具体文件名
+#pattern = r"^constants\.py$"    # 或者替换为正则表达式或具体文件名
+pattern = None
+local_dir = "your_local_dir" # 或者替换为目标目录
+branch = "main"  # 或者替换为具体的分支名称
+
+download_with_git(access_token, repo_id, repo_type=repo_type, pattern=pattern, local_dir=local_dir, branch=branch)
 ```

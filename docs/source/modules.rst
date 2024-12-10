@@ -13,7 +13,9 @@ wisemodel_hub api
 .. autofunction:: wisemodel_hub.snapshot_download
 .. autofunction:: wisemodel_hub.file_download
 .. autofunction:: wisemodel_hub.lfs_file_download
+.. autofunction:: wisemodel_hub.download_with_git
 上传
 -------------
 .. autofunction:: wisemodel_hub.push_to_hub
 .. autofunction:: wisemodel_hub.upload_file
+.. autofunction:: wisemodel_hub.upload_with_git
