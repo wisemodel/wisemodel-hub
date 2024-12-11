@@ -60,7 +60,7 @@ class GitFileDownload:
             progress_bar = tqdm(total=total_size, unit="iB", unit_scale=True, initial=resume_size)
 
             # Create incomplete file if it doesn't exist
-
+            os.makedirs(os.path.dirname(incomplete_path), exist_ok=True)
             with open(incomplete_path, "ab") as f:
                 for chunk in r.iter_content(chunk_size=1024):
                     if chunk:

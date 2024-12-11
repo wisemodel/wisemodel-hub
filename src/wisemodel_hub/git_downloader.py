@@ -1,11 +1,10 @@
 import os
-import re
 import subprocess
 
 import gitlab
 
 from .constants import WM_GITLAB_ENDPOINT
-from .utils import ensure_git_lfs_installed, is_git_repository, is_sparse_checkout
+from .utils import ensure_git_lfs_installed, filter_files_with_fnmatch, is_git_repository, is_sparse_checkout
 
 
 class GitDownloader:
@@ -53,10 +52,7 @@ class GitDownloader:
 
         # 获取所有文件
         all_files = self.get_all_files(repo_id, path="", revision=revision)
-        # 使用正则表达式筛选文件
-        regex = re.compile(pattern)
-        matching_files = [file for file in all_files if regex.match(file)]
-        print(matching_files)
+        matching_files = filter_files_with_fnmatch(all_files, pattern)
 
         os.makedirs(local_dir, exist_ok=True)
 

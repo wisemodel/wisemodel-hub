@@ -7,7 +7,6 @@ import os
 import requests
 
 from .constants import CACHE_PATH, NOTEBOOK_LOGIN_HTML_END, NOTEBOOK_LOGIN_HTML_START, WM_URL_LOGIN
-from .utils import is_notebook
 
 
 logger = logging.getLogger(__name__)
@@ -146,6 +145,8 @@ def login(new_session=False):
 
 
 def login_required(func):
+    from .utils import is_notebook
+
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         if is_notebook():

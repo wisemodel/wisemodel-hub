@@ -6,19 +6,20 @@ from tqdm import tqdm
 from .auth import get_local_token, login, login_required, notebook_login
 from .constants import WM_URL_ADDFILES, WM_URL_BASE, WM_URL_CHECK, WM_URL_MERGE, WM_URL_UPLOAD
 from .git_uploader import GitUploader
-from .utils import calculate_md5, filter_files_with_regex, is_notebook
+from .utils import calculate_md5, get_filtered_paths, is_branch_exist, is_notebook
 
 
 @login_required
 def upload_file(
     file_path,
     repo_id,
-    repo_type,
-    branch,
+    repo_type="models",
+    branch="main",
     commit_message="添加文件",
     chunk_size=5 * 1024 * 1024,
     retries=3,
     timeout=None,
+    repo_dir=None
 ):
     """
     upload_file 上传单个文件
@@ -36,7 +37,10 @@ def upload_file(
     - **chunk_size** - 上传时使用的分段大小，默认为5MB
     - **retries** - 上传失败重试次数
     - **timeout** - 调用主站api的超时时间，默认为None
+    - **repo_dir** - 远程仓库的相对路径，默认为None，即上传到仓库根目录
     """
+    if not is_branch_exist(repo_id, repo_type, branch):
+        raise ValueError(f"仓库 {repo_id} 不存在分支 {branch}")
     token = get_local_token()
     file_name = os.path.basename(file_path)
     file_md5 = calculate_md5(file_path)
@@ -117,15 +121,22 @@ def upload_file(
     print(f"文件合并成功: {merged_file_path}")
 
     # Step 5: Add merged file to repository
+    if not repo_dir:
+        repo_dir = ""
     addfiles_data = {
         "project_path": remote_project_url,
         "branch": branch,
         "files": [merged_file_path],
         "commit": commit_message,
         "wangpan_url": "",
+        "git_folder": repo_dir,
     }
+    print(f"addfiles_data: {addfiles_data}")
+    print(f"headers: {headers}")
+    headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
     response = requests.post(WM_URL_ADDFILES, json=addfiles_data, headers=headers)
     addfiles_response = response.json()
+    print(f"addfiles_response: {addfiles_response}")
 
     if addfiles_response["code"] != 0:
         print(f"添加文件到仓库失败: {addfiles_response['message']}")
@@ -138,10 +149,10 @@ def upload_file(
 def push_to_hub(
     dir_path,
     repo_id,
-    repo_type,
-    regex_pattern=None,
+    repo_type="models",
+    pattern=None,
     branch="master",
-    commit_message="commit",
+    commit_message="上传文件夹",
     chunk_size=5 * 1024 * 1024,
     retries=3,
     timeout=None,
@@ -157,7 +168,7 @@ def push_to_hub(
     - **dir_path** - 要上传文件的全路径
     - **repo_id** - 仓库id，格式为 'owner/repo_name'
     - **repo_type** - 仓库类型，可选值：'models'、'datasets'、'codes'
-    - **regex_pattern** - 正则表达式串，用于过滤文件
+    - **pattern** - fnmatch格式的匹配字符串，用于过滤文件名，默认为None，即不过滤
     - **branch** - wisemodel使用git管理仓库，此参数是git分支名
     - **commit_message** - 仓库提交信息
     - **chunk_size** - 上传时使用的分段大小，默认为5MB
@@ -168,19 +179,22 @@ def push_to_hub(
     ::::::::::
     ValueError - dir_path 路径不是文件夹
     """
+    if not is_branch_exist(repo_id, repo_type, branch):
+        raise ValueError(f"仓库 {repo_id} 不存在分支 {branch}")
     if not os.path.isdir(dir_path):
         raise ValueError(f"指定路径 '{dir_path}' 不是文件夹")
-    # 获取文件列表并进行正则表达式过滤
-    file_list = os.listdir(dir_path)
-    if regex_pattern:
-        file_list = filter_files_with_regex(file_list, regex_pattern)
-    for file_name in file_list:
-        file_path = os.path.join(dir_path, file_name)
-        upload_file(file_path, repo_id, repo_type, branch, commit_message, chunk_size, retries, timeout)
-
+    file_list = get_filtered_paths(dir_path, pattern)
+    for rel_path, full_path in file_list:
+        upload_file(full_path, repo_id, repo_type, branch, commit_message, chunk_size, retries, timeout, repo_dir=os.path.dirname(rel_path))
 
 def upload_with_git(
-    access_token, repo_id, repo_type, local_dir, branch="main", pattern=None, commit_message="Upload files"
+    access_token,
+    repo_id,
+    repo_type="models",
+    local_dir=None,
+    branch="main",
+    pattern=None,
+    commit_message="Upload files",
 ):
     """
     upload_with_git 利用本地的git工具上传文件到主站仓库
@@ -196,7 +210,7 @@ def upload_with_git(
     - **repo_type** - 仓库类型，可选值：'models'、'datasets'、'codes'
     - **local_dir** - 本地文件夹路径
     - **branch** - wisemodel使用git管理仓库，此参数是git分支名
-    - **pattern** - 正则表达式串，用于匹配要操作的文件
+    - **pattern** - fnmatch格式的匹配字符串，用于过滤文件名，默认为None，即不过滤
     - **commit_message** - 仓库提交信息
 
     抛出异常：
@@ -205,15 +219,14 @@ def upload_with_git(
     - **ValueError** - local_dir 没有赋值时抛出
     - **EnvironmentError** - git仓库初始化失败时抛出, git lfs未安装时抛出
     """
-    # 使用示例
+    if not is_branch_exist(repo_id, repo_type, branch):
+        raise ValueError(f"仓库 {repo_id} 不存在分支 {branch}")
     uploader = GitUploader(access_token=access_token, local_dir=local_dir)
     if not pattern:
-        # 上传整个库
         uploader.upload_repository(
             repo_id=repo_id, repo_type=repo_type, local_dir=local_dir, revision=branch, commit_message=commit_message
         )
     else:
-        # 上传匹配的文件
         uploader.upload_file(
             repo_id=repo_id,
             repo_type=repo_type,

@@ -22,7 +22,8 @@ class LFSDownload:
         self.progress_bar = None
         self.headers = deepcopy(HEADERS)
         self.local_dir = local_dir
-        self.file_name = os.path.join(self.local_dir, file_name)
+        if self.local_dir:
+            self.file_name = os.path.join(self.local_dir, file_name)
         self.force_download = force_download
 
     def prepare(self):
@@ -58,6 +59,7 @@ class LFSDownload:
 
         response = requests.get(self.url, headers=self.headers, stream=True)
 
+        os.makedirs(os.path.dirname(temp_file), exist_ok=True)
         with open(temp_file, "ab") as f:  # Write to temporary file
             for chunk in response.iter_content(chunk_size=8192):
                 if chunk:
