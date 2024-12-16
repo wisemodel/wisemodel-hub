@@ -1,8 +1,7 @@
 import os
-import re
 import subprocess
 
-from .utils import ensure_git_lfs_installed, is_git_repository
+from .utils import ensure_git_lfs_installed, filter_files_with_fnmatch, is_git_repository
 
 
 class GitUploader:
@@ -47,7 +46,7 @@ class GitUploader:
         except subprocess.CalledProcessError as e:
             raise self.GitUploadError(f"Failed to upload files: {e.stderr}")
 
-    def get_all_files(self, local_dir, pattern=None):
+    def get_all_files(self, local_dir):
         result = subprocess.run(
             ["git", "status", "--porcelain"], cwd=local_dir, check=True, capture_output=True, text=True
         )
@@ -55,11 +54,7 @@ class GitUploader:
         for line in result.stdout.splitlines():
             # 当文件名称是unicode编码时，文件名会被双引号包裹
             file_path = line[3:].strip('"')  # 'git status --porcelain' output format: XY file
-            if pattern:
-                if re.match(pattern, file_path):
-                    all_files.append(file_path)
-            else:
-                all_files.append(file_path)
+            all_files.append(file_path)
         return all_files
 
     def upload_repository(
@@ -103,6 +98,6 @@ class GitUploader:
 
         self.set_remote_url(local_dir, repo_url)
 
-        matching_files = self.get_all_files(local_dir, pattern)
+        matching_files = filter_files_with_fnmatch(self.get_all_files(local_dir, pattern))
         print(f"matching_files: {matching_files}")
         self.upload_files(local_dir, matching_files, message=commit_message)

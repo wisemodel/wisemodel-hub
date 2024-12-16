@@ -56,6 +56,13 @@ extras["all"] = extras["quality"] + extras["typing"] + extras["doc"]
 
 extras["dev"] = extras["all"]
 
+entry_points = {
+    "console_scripts": [
+        "wm_upload=wisemodel_hub.upload_script:wm_upload",
+        "wm_download=wisemodel_hub.download_script:wm_download",
+    ],
+}
+
 setup(
     name="wisemodel_hub",
     version=get_version(),
@@ -72,6 +79,7 @@ setup(
     extras_require=extras,
     python_requires=">=3.8.0",
     install_requires=install_requires,
+    entry_points=entry_points,
     classifiers=[
         "Intended Audience :: Developers",
         "Intended Audience :: Education",
