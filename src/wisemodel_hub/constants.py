@@ -20,10 +20,11 @@ TEN_MB = 10 * 1024 * 1024
 SLEEP_TIME = 5
 
 WM_URL_BASE = "https://www.wisemodel.cn"
-WM_URL_CHECK = "https://www.wisemodel.cn/gateway/fileupload/api/v1/check"
-WM_URL_UPLOAD = "https://www.wisemodel.cn/gateway/fileupload/api/v1/upload"
-WM_URL_MERGE = "https://www.wisemodel.cn/gateway/fileupload/api/v1/merge"
-WM_URL_ADDFILES = "https://www.wisemodel.cn/gateway/fileupload/api/v1/addfiles"
+WM_URL_UPLOAD_BASE = "https://uploadfile.wisemodel.cn"
+WM_URL_CHECK = f"{WM_URL_UPLOAD_BASE}/gateway/fileupload/api/v1/check"
+WM_URL_UPLOAD = f"{WM_URL_UPLOAD_BASE}/gateway/fileupload/api/v1/upload"
+WM_URL_MERGE = f"{WM_URL_UPLOAD_BASE}/gateway/fileupload/api/v1/merge"
+WM_URL_ADDFILES = f"{WM_URL_UPLOAD_BASE}/gateway/fileupload/api/v1/addfiles"
 WM_URL_LOGIN = "https://www.wisemodel.cn/gateway/user/api/v1/login"
 WM_URL_LIST_BRANCH = "https://wisemodel.cn/gateway/project/api/v1/branchlist"
 
