@@ -119,7 +119,7 @@ def ensure_git_lfs_installed():
 @login_required
 def get_repo_branch_list(repo_id, repo_type):
     token = get_local_token()
-    remote_project_url = os.path.join(WM_URL_BASE, repo_type, repo_id)
+    remote_project_url = f"{WM_URL_BASE}/{repo_type}/{repo_id}"
 
     request = {"project_path": remote_project_url}
     headers = {"authorization": f"Bearer {token}"}
