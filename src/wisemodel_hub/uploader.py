@@ -44,7 +44,7 @@ def upload_file(
     token = get_local_token()
     file_name = os.path.basename(file_path)
     file_md5 = calculate_md5(file_path)
-    remote_project_url = os.path.join(WM_URL_BASE, repo_type, repo_id)
+    remote_project_url = f"{WM_URL_BASE}/{repo_type}/{repo_id}"
 
     # Step 1: Check the file chunk status
     check_data = {"fileName": file_name, "fileMd5": file_md5, "dir": "", "project_path": remote_project_url}
