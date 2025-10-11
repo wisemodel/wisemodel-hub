@@ -6,7 +6,7 @@ from tqdm import tqdm
 from .auth import get_local_token, login, login_required, notebook_login
 from .constants import WM_URL_ADDFILES, WM_URL_BASE, WM_URL_CHECK, WM_URL_MERGE, WM_URL_UPLOAD
 from .git_uploader import GitUploader
-from .utils import calculate_md5, get_filtered_paths, is_branch_exist, is_notebook,get_repo_file_list
+from .utils import calculate_md5, get_filtered_curr_paths, is_branch_exist, is_notebook,get_repo_file_list
 
 
 @login_required
@@ -197,11 +197,14 @@ def push_to_hub(
         try:
         
             for root, _, _ in os.walk(dir_path):
-               
-                  all_local_files = get_filtered_paths(root, pattern)
-                   
+                  
+                  all_local_files = get_filtered_curr_paths(root, pattern)
+                 
                   relative_path = os.path.relpath(root, dir_path)
-                  repo_list=get_repo_file_list(repo_id, repo_type,relative_path,branch)
+                  gitPath=relative_path
+                  if relative_path==".":
+                        gitPath="" 
+                  repo_list=get_repo_file_list(repo_id, repo_type,gitPath,branch)
                   
                   if repo_list:
                         
