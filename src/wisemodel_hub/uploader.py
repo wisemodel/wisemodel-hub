@@ -6,7 +6,7 @@ from tqdm import tqdm
 from .auth import get_local_token, login, login_required, notebook_login
 from .constants import WM_URL_ADDFILES, WM_URL_BASE, WM_URL_CHECK, WM_URL_MERGE, WM_URL_UPLOAD
 from .git_uploader import GitUploader
-from .utils import calculate_md5, get_filtered_paths, is_branch_exist, is_notebook
+from .utils import calculate_md5, get_filtered_paths, is_branch_exist, is_notebook,get_repo_file_list
 
 
 @login_required
@@ -156,6 +156,7 @@ def push_to_hub(
     chunk_size=5 * 1024 * 1024,
     retries=3,
     timeout=None,
+    resumable: bool = True,
 ):
     """
     push_to_hub 上传文件夹到主站仓库
@@ -174,7 +175,7 @@ def push_to_hub(
     - **chunk_size** - 上传时使用的分段大小，默认为5MB
     - **retries** - 上传失败重试次数
     - **timeout** - 调用主站api的超时时间，默认为None
-
+    - **resumable** - 是否开启文件夹级别的断点续传。默认为True。
     抛出异常：
     ::::::::::
     ValueError - dir_path 路径不是文件夹
@@ -183,8 +184,59 @@ def push_to_hub(
         raise ValueError(f"仓库 {repo_id} 不存在分支 {branch}")
     if not os.path.isdir(dir_path):
         raise ValueError(f"指定路径 '{dir_path}' 不是文件夹")
-    file_list = get_filtered_paths(dir_path, pattern)
-    for rel_path, full_path in file_list:
+    
+
+    files_to_upload = []
+    skipped_count = 0
+   
+     # --- Step 0: 文件夹级别检查 ---
+    if resumable:
+        print("🔍 正在检查服务端已存在的文件...")
+       
+        
+        try:
+        
+            for root, _, _ in os.walk(dir_path):
+               
+                  all_local_files = get_filtered_paths(root, pattern)
+                   
+                  relative_path = os.path.relpath(root, dir_path)
+                  repo_list=get_repo_file_list(repo_id, repo_type,relative_path,branch)
+                  
+                  if repo_list:
+                        
+                        print(f"📋 发现服务端已存在 {len(repo_list)} 个文件。")
+
+                        # --- Step 1: 本地与服务端文件对比 ---
+                        for rel_path, full_path in all_local_files:
+                            if rel_path in repo_list["name"]:
+                                print(f"🗂️ 跳过已存在的文件: {rel_path}")
+                                skipped_count += 1
+                            else:
+                                files_to_upload.append((rel_path, full_path))
+                  else:
+                        print("无法获取服务端文件列表，将上传所有文件")
+                        files_to_upload = all_local_files # 回退到上传所有文件
+              
+        except requests.exceptions.RequestException as e:
+                    print(f"⚠️ 检查服务端文件列表时网络出错，将上传所有文件。原因: {e}")
+                    files_to_upload = all_local_files # 回退到上传所有文件
+
+    else:
+                print("📤 强制完整上传模式：将上传所有文件，忽略服务端状态。")
+                files_to_upload = all_local_files
+
+    # --- 总结与准备 ---
+    total_files = len(all_local_files)
+    if skipped_count > 0:
+        print(f"\n--- 文件检查完毕: 共 {total_files} 个文件，已跳过 {skipped_count} 个，准备上传剩余的 {len(files_to_upload)} 个文件 ---")
+    elif files_to_upload:
+        print(f"\n--- 准备上传全部 {len(files_to_upload)} 个文件 ---")
+    else:
+        print("\n🎉 所有文件都已存在于服务端，无需上传。")
+        return
+
+    for rel_path, full_path in files_to_upload:
         upload_file(full_path, repo_id, repo_type, branch, commit_message, chunk_size, retries, timeout, repo_dir=os.path.dirname(rel_path))
 
 def upload_with_git(

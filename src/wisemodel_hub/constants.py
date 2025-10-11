@@ -27,6 +27,7 @@ WM_URL_MERGE = f"{WM_URL_UPLOAD_BASE}/gateway/fileupload/api/v1/merge"
 WM_URL_ADDFILES = f"{WM_URL_UPLOAD_BASE}/gateway/fileupload/api/v1/addfiles"
 WM_URL_LOGIN = "https://www.wisemodel.cn/gateway/user/api/v1/login"
 WM_URL_LIST_BRANCH = "https://wisemodel.cn/gateway/project/api/v1/branchlist"
+WM_URL_LIST_FILES = "https://wisemodel.cn/gateway/project/api/v1/listfiles"
 
 NOTEBOOK_LOGIN_HTML_START = """<center> <img
 src=https://www.wisemodel.cn/img/logo.31fb6580.png
