@@ -156,7 +156,7 @@ def push_to_hub(
     chunk_size=5 * 1024 * 1024,
     retries=3,
     timeout=None,
-    resumable: bool = True,
+    resumable: bool = False,
 ):
     """
     push_to_hub 上传文件夹到主站仓库
