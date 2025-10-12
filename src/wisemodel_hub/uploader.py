@@ -6,7 +6,7 @@ from tqdm import tqdm
 from .auth import get_local_token, login, login_required, notebook_login
 from .constants import WM_URL_ADDFILES, WM_URL_BASE, WM_URL_CHECK, WM_URL_MERGE, WM_URL_UPLOAD
 from .git_uploader import GitUploader
-from .utils import calculate_md5, get_filtered_curr_paths, is_branch_exist, is_notebook,get_repo_file_list
+from .utils import calculate_md5, get_filtered_curr_paths, is_branch_exist, is_notebook,get_repo_file_list,get_filtered_paths
 
 
 @login_required
@@ -184,7 +184,7 @@ def push_to_hub(
         raise ValueError(f"仓库 {repo_id} 不存在分支 {branch}")
     if not os.path.isdir(dir_path):
         raise ValueError(f"指定路径 '{dir_path}' 不是文件夹")
-    
+    all_local_files = get_filtered_paths(dir_path, pattern)
 
     files_to_upload = []
     skipped_count = 0
@@ -197,33 +197,40 @@ def push_to_hub(
         try:
         
             for root, _, _ in os.walk(dir_path):
-                  
+                  print(f"检查目录: {root}")
+                  if root.find(".git")>=0 :
+                        print ("跳过.git目录")
+                        continue
                   all_local_files = get_filtered_curr_paths(root, pattern)
                  
                   relative_path = os.path.relpath(root, dir_path)
                   gitPath=relative_path
+                 
                   if relative_path==".":
                         gitPath="" 
+                  
                   repo_list=get_repo_file_list(repo_id, repo_type,gitPath,branch)
                   
                   if repo_list:
                         
                         print(f"📋 发现服务端已存在 {len(repo_list)} 个文件。")
-
+                        
                         # --- Step 1: 本地与服务端文件对比 ---
                         for rel_path, full_path in all_local_files:
-                            if rel_path in repo_list["name"]:
+                            if rel_path in repo_list:
                                 print(f"🗂️ 跳过已存在的文件: {rel_path}")
                                 skipped_count += 1
                             else:
                                 files_to_upload.append((rel_path, full_path))
                   else:
                         print("无法获取服务端文件列表，将上传所有文件")
-                        files_to_upload = all_local_files # 回退到上传所有文件
+                        files_to_upload_data =  get_filtered_paths(dir_path, pattern) # 回退到上传所有文件
+                        files_to_upload.append(files_to_upload_data)
+                        print(f"files_to_upload: {len(files_to_upload)}")
               
         except requests.exceptions.RequestException as e:
                     print(f"⚠️ 检查服务端文件列表时网络出错，将上传所有文件。原因: {e}")
-                    files_to_upload = all_local_files # 回退到上传所有文件
+                    files_to_upload =  all_local_files # 回退到上传所有文件
 
     else:
                 print("📤 强制完整上传模式：将上传所有文件，忽略服务端状态。")

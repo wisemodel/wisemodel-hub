@@ -120,12 +120,12 @@ def ensure_git_lfs_installed():
 def get_repo_branch_list(repo_id, repo_type):
     token = get_local_token()
     remote_project_url = os.path.join(WM_URL_BASE, repo_type, repo_id)
-
+    remote_project_url=str.replace(remote_project_url,"\\","/")
     request = {"project_path": remote_project_url}
     headers = {"authorization": f"Bearer {token}"}
     response = requests.post(WM_URL_LIST_BRANCH, data=json.dumps(request), headers=headers)
     json_response = response.json()
-
+    print(json_response)
     if json_response["code"] == 0:
         return [item["branch"] for item in json_response["data"]["list"]]
     elif json_response["code"] == 10003:
@@ -166,19 +166,21 @@ def get_filtered_curr_paths(folder_path, pattern):
 @login_required
 def get_repo_file_list(repo_id, repo_type,path="", branch="main"):
     token = get_local_token()
+ 
     remote_project_url = os.path.join(WM_URL_BASE, repo_type, repo_id)
-
-    baseReq={"page":1,"page_size":500}
+    remote_project_url=str.replace(remote_project_url,"\\","/")
+    baseReq={"page":1,"pageSize":500}
     request = {"project_path": remote_project_url,"path":path,"branch":branch,"baseReq":baseReq}
     headers = {"authorization": f"Bearer {token}"}
+    print(request)
     response = requests.post(WM_URL_LIST_FILES, data=json.dumps(request), headers=headers)
     json_response = response.json()
-
+    print(json_response)
     if json_response["code"] == 0:
-        return [item["files"] for item in json_response["data"]["list"]]
+        return [item["name"] for item in json_response["data"]["list"]]
     elif json_response["code"] == 10003:
         raise ValueError(
-            f"Not found any branches in repository: {repo_type}/{repo_id}, you can check value of papameters repo_id and repo_type."
+            f"Not found any files in repository: {repo_type}/{repo_id}, you can check value of papameters repo_id and repo_type."
         )
     else:
         raise ValueError("Failed to get branch list from remote server.")
