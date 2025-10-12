@@ -151,7 +151,7 @@ def push_to_hub(
     repo_id,
     repo_type="models",
     pattern=None,
-    branch="master",
+    branch="main",
     commit_message="上传文件夹",
     chunk_size=5 * 1024 * 1024,
     retries=3,
