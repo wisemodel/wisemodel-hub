@@ -21,6 +21,7 @@ def wm_upload():
     parser.add_argument("--timeout", type=int, default=None, help="超时时间（秒）。默认值：None（永不超时）")
     parser.add_argument("--repo_dir", type=str, default=None, help="远程仓库目录。默认值：None（上传到仓库根目录），如果file_path，此参数无效")
     parser.add_argument("--use_git", action="store_true", help="使用 git 上传。")
+    parser.add_argument("--resumable", type=bool, default=True, help="开启文件夹上传中断后的断点续传。")
 
     args = parser.parse_args()
 
@@ -46,6 +47,7 @@ def wm_upload():
                 chunk_size=args.chunk_size,
                 retries=args.retries,
                 timeout=args.timeout,
+                resumable=args.resumable,                
             )
         else:
             upload_file(
