@@ -86,8 +86,8 @@ commit_message = "your message" # commit message                            # �
 chunk_size = 1024 * 1024        # 设置文件块大小，例如1 MB                    # 可选，默认值 5 * 1024 * 1024, 即5MB
 retries=3                       # 失败重试次数                               # 可选，默认值 3
 timeout=10                      # 超时时间，如果不设置则一直等待               # 可选，默认值 None (永不超时)
-
-push_to_hub(dir_path, repo_id, repo_type, pattern=pattern, branch=branch, commit_message=commit_message, chunk_size=chunk_size, retries=3, timeout=10)
+resumable = True                             #是否开启文件夹级别的断点续传。默认为True
+push_to_hub(dir_path, repo_id, repo_type, pattern=pattern, branch=branch, commit_message=commit_message, chunk_size=chunk_size, retries=3, timeout=10,resumable= True)
 ``` 
 
 ### 利用本地git工具上传
