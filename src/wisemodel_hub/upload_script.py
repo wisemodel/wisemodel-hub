@@ -26,6 +26,7 @@ def wm_upload():
     parser.add_argument("--repo_dir", type=str, default=None, help="远程仓库目录。默认值：None（上传到仓库根目录），如果file_path，此参数无效")
     parser.add_argument("--use_git", action="store_true", help="使用 git 上传。")
 
+
     args = parser.parse_args()
 
     if args.use_git:
