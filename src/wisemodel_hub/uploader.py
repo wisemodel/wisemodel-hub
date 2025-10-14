@@ -180,6 +180,10 @@ def push_to_hub(
     ::::::::::
     ValueError - dir_path 路径不是文件夹
     """
+    if resumable:
+        print("📂 断点续传模式已开启：将检查服务端已存在的文件，跳过重复上传。")
+    else:
+        print("📤 强制完整上传模式：将上传所有文件，忽略服务端状态。")
     if not is_branch_exist(repo_id, repo_type, branch):
         raise ValueError(f"仓库 {repo_id} 不存在分支 {branch}")
     if not os.path.isdir(dir_path):

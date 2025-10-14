@@ -21,7 +21,7 @@ def wm_upload():
     parser.add_argument("--retries", type=int, default=3, help="失败重试次数。默认值：3")
     parser.add_argument("--timeout", type=int, default=None, help="超时时间（秒）。默认值：None（永不超时）")
     parser.add_argument(
-        "--resumable",  action="store_true", help="是否开启文件夹级别的断点续传。默认值：True,如果带上参数则为False"
+        "--resumable",  type=int, default=1, help="是否开启文件夹级别的断点续传。默认值：1,不开启传0"
     )
     parser.add_argument("--repo_dir", type=str, default=None, help="远程仓库目录。默认值：None（上传到仓库根目录），如果file_path，此参数无效")
     parser.add_argument("--use_git", action="store_true", help="使用 git 上传。")
@@ -42,7 +42,10 @@ def wm_upload():
     else:
         
         if os.path.isdir(args.file_path):
-            
+            if args.resumable==1:
+                resumable=True
+            else:
+                resumable=False
             push_to_hub(
                 dir_path=args.file_path,
                 repo_id=args.repo_id,
@@ -53,7 +56,7 @@ def wm_upload():
                 chunk_size=args.chunk_size,
                 retries=args.retries,
                 timeout=args.timeout,
-                resumable=args.resumable,
+                resumable=resumable,
             )
         else:
             upload_file(
