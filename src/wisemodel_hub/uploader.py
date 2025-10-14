@@ -201,6 +201,9 @@ def push_to_hub(
                   if root.find(".git")>=0 :
                         print ("跳过.git目录")
                         continue
+                  if root.find(".cache")>=0 :
+                        print ("跳过.cache目录")
+                        continue
                   all_local_files = get_filtered_curr_paths(root, pattern)
                  
                   relative_path = os.path.relpath(root, dir_path)
@@ -224,8 +227,9 @@ def push_to_hub(
                                 files_to_upload.append((rel_path, full_path))
                   else:
                         print("无法获取服务端文件列表，将上传所有文件")
-                        files_to_upload_data =  get_filtered_paths(dir_path, pattern) # 回退到上传所有文件
-                        files_to_upload.append(files_to_upload_data)
+                        files_to_upload_data =  all_local_files # 回退到上传所有文件
+                        if len(files_to_upload_data)>0:
+                           files_to_upload.append(files_to_upload_data)
                         print(f"files_to_upload: {len(files_to_upload)}")
               
         except requests.exceptions.RequestException as e:
@@ -245,7 +249,7 @@ def push_to_hub(
     else:
         print("\n🎉 所有文件都已存在于服务端，无需上传。")
         return
-
+    #print(files_to_upload)
     for rel_path, full_path in files_to_upload:
         upload_file(full_path, repo_id, repo_type, branch, commit_message, chunk_size, retries, timeout, repo_dir=os.path.dirname(rel_path))
 

@@ -188,7 +188,7 @@ wm_upload /local/dir/path your_account/your_repo_name
 wm_upload -h
 
 usage: wm_upload [-h] [--repo_type REPO_TYPE] [--branch BRANCH] [--commit_message COMMIT_MESSAGE]
-                 [--chunk_size CHUNK_SIZE] [--retries RETRIES] [--timeout TIMEOUT] [--repo_dir REPO_DIR] [--use_git]
+                 [--chunk_size CHUNK_SIZE] [--retries RETRIES] [--timeout TIMEOUT] [--resumable] [--repo_dir REPO_DIR] [--use_git]
                  file_path repo_id
 
 上传文件或目录到 wisemodel hub。如果提示输入用户名和密码，请输入登录wisemodel.cn的用户名和密码。
@@ -208,6 +208,7 @@ options:
                         文件块大小（字节）。默认值：5MB
   --retries RETRIES     失败重试次数。默认值：3
   --timeout TIMEOUT     超时时间（秒）。默认值：None（永不超时）
+  --resumable 是否开启文件夹级别的断点续传。默认值：True,如果带上参数则为False
   --repo_dir REPO_DIR   远程仓库目录。默认值：None（上传到仓库根目录），如果参数 file_path 是文件，则起作用，如果参数 file_path 是目录，则无效。
   --use_git             使用 git 上传。
 ```
