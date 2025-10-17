@@ -9,7 +9,7 @@ import gitlab
 import requests
 
 from .auth import get_local_token, login_required
-from .constants import CACHE_PATH, HEADERS, TEN_MB, WM_ENDPOINT, WM_GITLAB_ENDPOINT, WM_URL_BASE, WM_URL_LIST_BRANCH
+from .constants import CACHE_PATH, HEADERS, TEN_MB, WM_ENDPOINT, WM_GITLAB_ENDPOINT, WM_URL_BASE, WM_URL_LIST_BRANCH,WM_URL_LIST_FILES
 
 
 logger = logging.getLogger(__name__)
@@ -120,12 +120,11 @@ def ensure_git_lfs_installed():
 def get_repo_branch_list(repo_id, repo_type):
     token = get_local_token()
     remote_project_url = f"{WM_URL_BASE}/{repo_type}/{repo_id}"
-
     request = {"project_path": remote_project_url}
     headers = {"authorization": f"Bearer {token}"}
     response = requests.post(WM_URL_LIST_BRANCH, data=json.dumps(request), headers=headers)
     json_response = response.json()
-
+    print(json_response)
     if json_response["code"] == 0:
         return [item["branch"] for item in json_response["data"]["list"]]
     elif json_response["code"] == 10003:
@@ -151,3 +150,36 @@ def get_filtered_paths(folder_path, pattern):
                 full_path = os.path.join(root, file)
                 paths.append((relative_path, full_path))
     return paths
+def get_filtered_curr_paths(folder_path, pattern):
+    paths = []
+    pattern = "*" if pattern is None else pattern
+    with os.scandir(folder_path) as it:
+      files = [entry for entry in it if entry.is_file()]
+    for file in files:
+            relative_path = os.path.relpath(os.path.join(folder_path, file), folder_path)
+            if fnmatch.fnmatch(relative_path, pattern):
+                full_path = os.path.join(folder_path, file)
+                paths.append((relative_path, full_path))
+    return paths
+
+@login_required
+def get_repo_file_list(repo_id, repo_type,path="", branch="main"):
+    token = get_local_token()
+ 
+    remote_project_url = os.path.join(WM_URL_BASE, repo_type, repo_id)
+    remote_project_url=str.replace(remote_project_url,"\\","/")
+    baseReq={"page":1,"pageSize":500}
+    request = {"project_path": remote_project_url,"path":path,"branch":branch,"baseReq":baseReq}
+    headers = {"authorization": f"Bearer {token}"}
+    print(request)
+    response = requests.post(WM_URL_LIST_FILES, data=json.dumps(request), headers=headers)
+    json_response = response.json()
+    print(json_response)
+    if json_response["code"] == 0:
+        return [item["name"] for item in json_response["data"]["list"]]
+    elif json_response["code"] == 10003:
+        raise ValueError(
+            f"Not found any files in repository: {repo_type}/{repo_id}, you can check value of papameters repo_id and repo_type."
+        )
+    else:
+        raise ValueError("Failed to get branch list from remote server.")

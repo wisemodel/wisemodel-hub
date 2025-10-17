@@ -1,6 +1,7 @@
 import argparse
 import os
-
+import sys
+sys.path.append("D:\\work\\wisecode\\github\\wisemodel-hub\\src")
 from wisemodel_hub import push_to_hub, upload_file, upload_with_git
 
 
@@ -19,8 +20,12 @@ def wm_upload():
     parser.add_argument("--chunk_size", type=int, default=5 * 1024 * 1024, help="文件块大小（字节）。默认值：5MB")
     parser.add_argument("--retries", type=int, default=3, help="失败重试次数。默认值：3")
     parser.add_argument("--timeout", type=int, default=None, help="超时时间（秒）。默认值：None（永不超时）")
+    parser.add_argument(
+        "--resumable",  type=int, default=1, help="是否开启文件夹级别的断点续传。默认值：1,不开启传0"
+    )
     parser.add_argument("--repo_dir", type=str, default=None, help="远程仓库目录。默认值：None（上传到仓库根目录），如果file_path，此参数无效")
     parser.add_argument("--use_git", action="store_true", help="使用 git 上传。")
+
 
     args = parser.parse_args()
 
@@ -35,7 +40,12 @@ def wm_upload():
             commit_message=args.commit_message,
         )
     else:
+        
         if os.path.isdir(args.file_path):
+            if args.resumable==1:
+                resumable=True
+            else:
+                resumable=False
             push_to_hub(
                 dir_path=args.file_path,
                 repo_id=args.repo_id,
@@ -46,6 +56,7 @@ def wm_upload():
                 chunk_size=args.chunk_size,
                 retries=args.retries,
                 timeout=args.timeout,
+                resumable=resumable,
             )
         else:
             upload_file(
