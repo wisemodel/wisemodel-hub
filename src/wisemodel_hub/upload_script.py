@@ -1,7 +1,6 @@
 import argparse
 import os
-import sys
-sys.path.append("D:\\work\\wisecode\\github\\wisemodel-hub\\src")
+
 from wisemodel_hub import push_to_hub, upload_file, upload_with_git
 
 
@@ -25,6 +24,7 @@ def wm_upload():
     )
     parser.add_argument("--repo_dir", type=str, default=None, help="远程仓库目录。默认值：None（上传到仓库根目录），如果file_path，此参数无效")
     parser.add_argument("--use_git", action="store_true", help="使用 git 上传。")
+    parser.add_argument("--workers", type=int, default=5, help="上传时的并发线程数，默认值：5")
 
 
     args = parser.parse_args()
@@ -40,7 +40,7 @@ def wm_upload():
             commit_message=args.commit_message,
         )
     else:
-        
+
         if os.path.isdir(args.file_path):
             if args.resumable==1:
                 resumable=True
@@ -57,6 +57,7 @@ def wm_upload():
                 retries=args.retries,
                 timeout=args.timeout,
                 resumable=resumable,
+                workers=args.workers,
             )
         else:
             upload_file(

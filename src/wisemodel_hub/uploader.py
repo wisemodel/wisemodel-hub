@@ -1,3 +1,4 @@
+import concurrent.futures
 import os
 
 import requests
@@ -6,7 +7,14 @@ from tqdm import tqdm
 from .auth import get_local_token, login, login_required, notebook_login
 from .constants import WM_URL_ADDFILES, WM_URL_BASE, WM_URL_CHECK, WM_URL_MERGE, WM_URL_UPLOAD
 from .git_uploader import GitUploader
-from .utils import calculate_md5, get_filtered_curr_paths, is_branch_exist, is_notebook,get_repo_file_list,get_filtered_paths
+from .utils import (
+    calculate_md5,
+    get_filtered_curr_paths,
+    get_filtered_paths,
+    get_repo_file_list,
+    is_branch_exist,
+    is_notebook,
+)
 
 
 @login_required
@@ -59,6 +67,8 @@ def upload_file(
             notebook_login(new_session=True)
         else:
             login(new_session=True)
+        token = get_local_token()
+        headers = {"Authorization": f"Bearer {token}"}
 
     if check_response["code"] != 0:
         print(f"文件检查失败: {check_response['message']}")
@@ -157,6 +167,7 @@ def push_to_hub(
     retries=3,
     timeout=None,
     resumable: bool = True,
+    workers: int = 5,
 ):
     """
     push_to_hub 上传文件夹到主站仓库
@@ -192,36 +203,35 @@ def push_to_hub(
 
     files_to_upload = []
     skipped_count = 0
-   
+
      # --- Step 0: 文件夹级别检查 ---
     if resumable:
         print("🔍 正在检查服务端已存在的文件...")
-       
-        
+
         try:
-        
+
             for root, _, _ in os.walk(dir_path):
                   print(f"检查目录: {root}")
                   if root.find(".git")>=0 :
                         print ("跳过.git目录")
                         continue
-                  if root.find(".cache")>=0 :
-                        print ("跳过.cache目录")
-                        continue
+#                  if root.find(".cache")>=0 :
+#                        print ("跳过.cache目录")
+#                        continue
                   all_local_files = get_filtered_curr_paths(root, pattern)
-                 
+
                   relative_path = os.path.relpath(root, dir_path)
                   gitPath=relative_path
-                 
+
                   if relative_path==".":
-                        gitPath="" 
-                  
+                        gitPath=""
+
                   repo_list=get_repo_file_list(repo_id, repo_type,gitPath,branch)
-                  
+
                   if repo_list:
-                        
+
                         print(f"📋 发现服务端已存在 {len(repo_list)} 个文件。")
-                        
+
                         # --- Step 1: 本地与服务端文件对比 ---
                         for rel_path, full_path in all_local_files:
                             if rel_path in repo_list:
@@ -235,7 +245,7 @@ def push_to_hub(
                         if len(files_to_upload_data)>0:
                            files_to_upload.append(files_to_upload_data)
                         print(f"files_to_upload: {len(files_to_upload)}")
-              
+
         except requests.exceptions.RequestException as e:
                     print(f"⚠️ 检查服务端文件列表时网络出错，将上传所有文件。原因: {e}")
                     files_to_upload =  all_local_files # 回退到上传所有文件
@@ -254,8 +264,14 @@ def push_to_hub(
         print("\n🎉 所有文件都已存在于服务端，无需上传。")
         return
     #print(files_to_upload)
+    def upload_wrapper(args):
+        rel_path, full_path = args[0], args[1]
+        return upload_file(full_path, repo_id, repo_type, branch, commit_message, chunk_size, retries, timeout, repo_dir=os.path.dirname(rel_path))
     for rel_path, full_path in files_to_upload:
-        upload_file(full_path, repo_id, repo_type, branch, commit_message, chunk_size, retries, timeout, repo_dir=os.path.dirname(rel_path))
+        # upload_file(full_path, repo_id, repo_type, branch, commit_message, chunk_size, retries, timeout, repo_dir=os.path.dirname(rel_path))
+        with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
+            list(executor.map(upload_wrapper, files_to_upload))
+
 
 def upload_with_git(
     access_token,

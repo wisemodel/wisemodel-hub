@@ -8,8 +8,17 @@ import subprocess
 import gitlab
 import requests
 
-from .auth import get_local_token, login_required
-from .constants import CACHE_PATH, HEADERS, TEN_MB, WM_ENDPOINT, WM_GITLAB_ENDPOINT, WM_URL_BASE, WM_URL_LIST_BRANCH,WM_URL_LIST_FILES
+from .auth import get_local_token, login, login_required, notebook_login
+from .constants import (
+    CACHE_PATH,
+    HEADERS,
+    TEN_MB,
+    WM_ENDPOINT,
+    WM_GITLAB_ENDPOINT,
+    WM_URL_BASE,
+    WM_URL_LIST_BRANCH,
+    WM_URL_LIST_FILES,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -115,15 +124,19 @@ def ensure_git_lfs_installed():
     except subprocess.CalledProcessError:
         raise EnvironmentError("git lfs is not installed. Please install it first.")
 
-
-@login_required
-def get_repo_branch_list(repo_id, repo_type):
+def _get_repo_branch_list(repo_id, repo_type):
     token = get_local_token()
     remote_project_url = f"{WM_URL_BASE}/{repo_type}/{repo_id}"
     request = {"project_path": remote_project_url}
     headers = {"authorization": f"Bearer {token}"}
     response = requests.post(WM_URL_LIST_BRANCH, data=json.dumps(request), headers=headers)
     json_response = response.json()
+    return json_response
+
+
+@login_required
+def get_repo_branch_list(repo_id, repo_type):
+    json_response = _get_repo_branch_list(repo_id, repo_type)
     print(json_response)
     if json_response["code"] == 0:
         return [item["branch"] for item in json_response["data"]["list"]]
@@ -131,9 +144,15 @@ def get_repo_branch_list(repo_id, repo_type):
         raise ValueError(
             f"Not found any branches in repository: {repo_type}/{repo_id}, you can check value of papameters repo_id and repo_type."
         )
+    elif json_response["code"] == "B2002":
+        # 如果提示token失败，则重新登录
+        if is_notebook():
+            notebook_login(new_session=True)
+        else:
+            login(new_session=True)
+        return get_repo_branch_list(repo_id, repo_type)
     else:
         raise ValueError("Failed to get branch list from remote server.")
-
 
 def is_branch_exist(repo_id, repo_type, branch_name):
     branch_list = get_repo_branch_list(repo_id, repo_type)
@@ -165,7 +184,7 @@ def get_filtered_curr_paths(folder_path, pattern):
 @login_required
 def get_repo_file_list(repo_id, repo_type,path="", branch="main"):
     token = get_local_token()
- 
+
     remote_project_url = os.path.join(WM_URL_BASE, repo_type, repo_id)
     remote_project_url=str.replace(remote_project_url,"\\","/")
     baseReq={"page":1,"pageSize":500}
