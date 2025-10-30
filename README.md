@@ -187,8 +187,9 @@ wm_upload /local/dir/path your_account/your_repo_name
 ```shell
 wm_upload -h
 
-usage: wm_upload [-h] [--repo_type REPO_TYPE] [--branch BRANCH] [--commit_message COMMIT_MESSAGE]
-                 [--chunk_size CHUNK_SIZE] [--retries RETRIES] [--timeout TIMEOUT] [--resumable] [--repo_dir REPO_DIR] [--use_git]
+usage: wm_upload [-h] [--repo_type REPO_TYPE] [--branch BRANCH] [--pattern PATTERN] [--commit_message COMMIT_MESSAGE]
+                 [--chunk_size CHUNK_SIZE] [--retries RETRIES] [--timeout TIMEOUT] [--resumable RESUMABLE]
+                 [--repo_dir REPO_DIR] [--use_git] [--workers WORKERS]
                  file_path repo_id
 
 上传文件或目录到 wisemodel hub。如果提示输入用户名和密码，请输入登录wisemodel.cn的用户名和密码。
@@ -202,15 +203,18 @@ options:
   --repo_type REPO_TYPE
                         仓库类型（models, datasets, codes）。默认值：models
   --branch BRANCH       分支名称。默认值：main
+  --pattern PATTERN     文件匹配模式，使用fnmatch语法。默认值：*
   --commit_message COMMIT_MESSAGE
                         提交信息。默认值："添加文件"
   --chunk_size CHUNK_SIZE
                         文件块大小（字节）。默认值：5MB
   --retries RETRIES     失败重试次数。默认值：3
   --timeout TIMEOUT     超时时间（秒）。默认值：None（永不超时）
-  --resumable 是否开启文件夹级别的断点续传。默认值：1,不开启传0
-  --repo_dir REPO_DIR   远程仓库目录。默认值：None（上传到仓库根目录），如果参数 file_path 是文件，则起作用，如果参数 file_path 是目录，则无效。
+  --resumable RESUMABLE
+                        是否开启文件夹级别的断点续传。默认值：1,不开启传0
+  --repo_dir REPO_DIR   远程仓库目录。默认值：None（上传到仓库根目录），如果file_path，此参数无效
   --use_git             使用 git 上传。
+  --workers WORKERS     上传时的并发线程数，默认值：5
 ```
 
 ### 下载脚本
