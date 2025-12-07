@@ -267,6 +267,8 @@ def push_to_hub(
     def upload_wrapper(args):
         rel_path, full_path = args[0], args[1]
         return upload_file(full_path, repo_id, repo_type, branch, commit_message, chunk_size, retries, timeout, repo_dir=os.path.dirname(rel_path))
+    # 去掉非法的文件路径
+    files_to_upload = [item for item in files_to_upload if item and len(item) == 2 and item[0] and item[1]]
     for rel_path, full_path in files_to_upload:
         # upload_file(full_path, repo_id, repo_type, branch, commit_message, chunk_size, retries, timeout, repo_dir=os.path.dirname(rel_path))
         with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
