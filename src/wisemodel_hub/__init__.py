@@ -5,7 +5,7 @@ import sys
 from typing import TYPE_CHECKING
 
 
-__version__ = "v0.5.0"
+__version__ = "v0.5.1"
 
 # 配置日志记录
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
