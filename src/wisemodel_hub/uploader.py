@@ -207,9 +207,7 @@ def push_to_hub(
      # --- Step 0: 文件夹级别检查 ---
     if resumable:
         print("🔍 正在检查服务端已存在的文件...")
-
         try:
-
             for root, _, _ in os.walk(dir_path):
                   print(f"检查目录: {root}")
                   if root.find(".git")>=0 :
@@ -227,11 +225,8 @@ def push_to_hub(
                         gitPath=""
 
                   repo_list=get_repo_file_list(repo_id, repo_type,gitPath,branch)
-
                   if repo_list:
-
                         print(f"📋 发现服务端已存在 {len(repo_list)} 个文件。")
-
                         # --- Step 1: 本地与服务端文件对比 ---
                         for rel_path, full_path in all_local_files:
                             if rel_path in repo_list:
@@ -241,18 +236,16 @@ def push_to_hub(
                                 files_to_upload.append((rel_path, full_path))
                   else:
                         print("无法获取服务端文件列表，将上传所有文件")
-                        files_to_upload_data =  all_local_files # 回退到上传所有文件
-                        if len(files_to_upload_data)>0:
-                           files_to_upload.append(files_to_upload_data)
+                        files_to_upload.extend(all_local_files or [])
                         print(f"files_to_upload: {len(files_to_upload)}")
 
         except requests.exceptions.RequestException as e:
-                    print(f"⚠️ 检查服务端文件列表时网络出错，将上传所有文件。原因: {e}")
-                    files_to_upload =  all_local_files # 回退到上传所有文件
+            print(f"⚠️ 检查服务端文件列表时网络出错，将上传所有文件。原因: {e}")
+            files_to_upload =  all_local_files # 回退到上传所有文件
 
     else:
-                print("📤 强制完整上传模式：将上传所有文件，忽略服务端状态。")
-                files_to_upload = all_local_files
+        print("📤 强制完整上传模式：将上传所有文件，忽略服务端状态。")
+        files_to_upload = all_local_files
 
     # --- 总结与准备 ---
     total_files = len(all_local_files)
